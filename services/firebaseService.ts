@@ -8,12 +8,12 @@ import { CATEGORIES as staticCategoriesData, INITIAL_RECIPES as staticRecipesDat
 // Substitua este objeto pelas credenciais do seu projeto Firebase
 // Pode encontrá-las em: Configurações do Projeto > As suas apps > Configuração do SDK
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "SEU_AUTH_DOMAIN",
-  projectId: "SEU_PROJECT_ID",
-  storageBucket: "SEU_STORAGE_BUCKET",
-  messagingSenderId: "SEU_MESSAGING_SENDER_ID",
-  appId: "SUA_APP_ID"
+  apiKey: "AIzaSyCNE6q81fjBNsf3o9JWwuCzgh2tZvSFbaM",
+  authDomain: "fabricapromptscml.firebaseapp.com",
+  projectId: "fabricapromptscml",
+  storageBucket: "fabricapromptscml.firebasestorage.app",
+  messagingSenderId: "823692201885",
+  appId: "1:823692201885:web:bfacf74a0db08a8808e974",
 };
 
 // Inicializar a Firebase
