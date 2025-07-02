@@ -10,3 +10,4 @@
 [functions]
   # A localização das funções de servidor continua a mesma.
   directory = "netlify/functions"
+  timeout = 25
