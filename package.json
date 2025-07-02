@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "esbuild index.tsx --bundle --outfile=dist/bundle.js --jsx=automatic"
+    "build": "esbuild index.tsx --bundle --outfile=dist/bundle.js --jsx=automatic && cp index.html dist/"
   },
   "dependencies": {
     "canvas-confetti": "^1.9.3",
