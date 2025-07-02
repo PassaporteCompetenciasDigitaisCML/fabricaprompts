@@ -5,3 +5,5 @@
 [functions]
   # Indica à Netlify que as suas funções de servidor estão na pasta 'netlify/functions'.
   directory = "netlify/functions"
+
+command = ""
