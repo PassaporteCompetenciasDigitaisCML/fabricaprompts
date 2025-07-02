@@ -5,12 +5,12 @@ import Header from './components/Header';
 import CategorySelector from './components/CategorySelector';
 import RecipeSelector from './components/RecipeSelector';
 import PromptBuilder from './components/PromptBuilder';
-import { ArrowLeftIcon, CheckCircleIcon, AlertTriangleIcon } from './components/Icons';
+import { ArrowLeftIcon, AlertTriangleIcon } from './components/Icons';
 import { generateContentWithGemini, generatePromptSuggestion, generateImageWithGemini } from './services/geminiService';
 import { getRecipesAndCategories, updateRecipeRating } from './services/firebaseService';
 import Spinner from './components/Spinner';
 
-type AppState = 'selecting_category' | 'selecting_recipe' | 'building_prompt';
+export type AppState = 'selecting_category' | 'selecting_recipe' | 'building_prompt';
 type AppPhase = 'welcome' | 'main';
 type DataStatus = 'loading' | 'loaded' | 'error';
 type DataSource = 'firestore' | 'fallback';
@@ -192,43 +192,6 @@ const App: React.FC = () => {
         updateRecipeRating(recipeId, rating);
       }
   };
-
-  const ProgressIndicator = () => {
-    const steps = ['1', '2', '3'];
-    const currentStepIndex = appState === 'selecting_category' ? 0 : appState === 'selecting_recipe' ? 1 : 2;
-
-    return (
-      <nav aria-label="Progresso">
-        <ol role="list" className="flex items-center">
-          {steps.map((step, index) => (
-            <li key={step} className={`relative ${index !== steps.length - 1 ? 'pr-8 sm:pr-12' : ''}`}>
-              <div className="absolute inset-0 top-1/2 -translate-y-1/2" aria-hidden="true">
-                <div className={`h-0.5 w-full ${index < currentStepIndex ? 'bg-purple-600' : 'bg-slate-200'}`} />
-              </div>
-              <div
-                className={`relative flex h-8 w-8 items-center justify-center rounded-full font-bold
-                  ${index < currentStepIndex
-                    ? 'bg-purple-600'
-                    : index === currentStepIndex
-                    ? 'bg-purple-600'
-                    : 'bg-slate-200'
-                  }`
-                }
-              >
-                {index < currentStepIndex ? (
-                  <CheckCircleIcon className="h-5 w-5 text-white" />
-                ) : index === currentStepIndex ? (
-                  <span className="text-white">{step}</span>
-                ) : (
-                  <span className="text-slate-500">{step}</span>
-                )}
-              </div>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    );
-  };
   
   if (appPhase === 'welcome') {
     return (
@@ -254,7 +217,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      <Header />
+      <Header appState={appState} />
       <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
         {dataSource === 'fallback' && (
             <div className="bg-amber-100 border-l-4 border-amber-500 text-amber-700 p-4 rounded-md mb-8" role="alert">
@@ -282,7 +245,7 @@ const App: React.FC = () => {
           )}
           {dataStatus === 'loaded' && (
             <>
-              <div className="mb-12 flex justify-between items-center min-h-[4rem]">
+              <div className="mb-12 flex items-center min-h-[4rem]">
                 {appState !== 'selecting_category' ? (
                   <button
                     onClick={handleBack}
@@ -292,7 +255,6 @@ const App: React.FC = () => {
                     Voltar
                   </button>
                 ) : <div/>}
-                <ProgressIndicator />
               </div>
 
               {appState === 'selecting_category' && (
