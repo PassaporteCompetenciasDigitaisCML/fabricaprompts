@@ -22,7 +22,6 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
 
     if (type === 'image') {
       // Usa a Pollinations.ai para imagens (não requer chave de API)
-      // O prompt é codificado para ser seguro no URL
       const encodedPrompt = encodeURIComponent(prompt);
       result = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
 
@@ -51,7 +50,8 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
           "Authorization": `Bearer ${openRouterApiKey}`
         },
         body: JSON.stringify({
-          model: "deepseek/deepseek-chat", // Modelo compatível com OpenRouter
+          // ALTERAÇÃO CRÍTICA: Aponta para o modelo gratuito da OpenRouter
+          model: "deepseek/deepseek-chat-v3-0324:free", 
           messages: [
             { "role": "system", "content": systemInstruction },
             { "role": "user", "content": userMessage }
