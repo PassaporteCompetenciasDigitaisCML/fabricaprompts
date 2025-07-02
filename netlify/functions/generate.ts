@@ -27,10 +27,10 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
       result = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
 
     } else {
-      // Usa a DeepSeek para texto e sugestões
-      const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
-      if (!deepseekApiKey) {
-        throw new Error('DEEPSEEK_API_KEY is not configured in Netlify environment variables.');
+      // Usa a OpenRouter.ai para texto e sugestões
+      const openRouterApiKey = process.env.OPENROUTER_API_KEY;
+      if (!openRouterApiKey) {
+        throw new Error('OPENROUTER_API_KEY is not configured in Netlify environment variables.');
       }
 
       let systemInstruction = "You are a helpful assistant.";
@@ -44,29 +44,31 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
         ? `O prompt do utilizador é: "${prompt}". Dá-me uma dica para melhorar este prompt ou uma dica geral relacionada com ele.`
         : prompt;
 
-      const response = await fetch("https://api.deepseek.com/chat/completions", {
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${deepseekApiKey}`
+          "Authorization": `Bearer ${openRouterApiKey}`
         },
         body: JSON.stringify({
-          model: "deepseek-chat",
+          model: "deepseek/deepseek-chat", // Modelo compatível com OpenRouter
           messages: [
             { "role": "system", "content": systemInstruction },
             { "role": "user", "content": userMessage }
-          ],
-          stream: false
+          ]
         })
       });
       
       if (!response.ok) {
         const errorBody = await response.json();
-        console.error("DeepSeek API Error:", errorBody);
-        throw new Error(errorBody.error?.message || `DeepSeek API request failed with status ${response.status}`);
+        console.error("OpenRouter API Error:", errorBody);
+        throw new Error(errorBody.error?.message || `OpenRouter API request failed with status ${response.status}`);
       }
       
       const data = await response.json();
+      if (!data.choices || data.choices.length === 0 || !data.choices[0].message) {
+        throw new Error("Resposta inválida da API OpenRouter.");
+      }
       result = data.choices[0].message.content;
     }
 
