@@ -1,13 +1,12 @@
 # Ficheiro: netlify.toml
 
 [build]
-  # Esta é a linha mais importante. Diz à Netlify para NÃO executar "npm install".
-  command = "echo 'Build-less site, no command to run.'"
+  # Executa o nosso novo script de build definido no package.json
+  command = "npm run build"
   
-  # Publica os ficheiros da raiz do projeto.
-  publish = "."
+  # Os ficheiros finais do site estarão na pasta "dist".
+  publish = "dist"
 
 [functions]
-  # Indica onde estão as suas funções de servidor.
+  # A localização das funções de servidor continua a mesma.
   directory = "netlify/functions"
-  
