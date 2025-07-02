@@ -50,7 +50,7 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
           "Authorization": `Bearer ${openRouterApiKey}`
         },
         body: JSON.stringify({
-          // ALTERAÇÃO CRÍTICA: Aponta para o modelo gratuito da OpenRouter
+          // CORREÇÃO: Usa o nome do modelo gratuito da OpenRouter
           model: "deepseek/deepseek-chat-v3-0324:free", 
           messages: [
             { "role": "system", "content": systemInstruction },
