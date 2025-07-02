@@ -1,13 +1,15 @@
 # Ficheiro: netlify.toml
 
 [build]
-  # Executa o nosso novo script de build definido no package.json
+  # Executa o nosso script de build definido no package.json
   command = "npm run build"
   
   # Os ficheiros finais do site estarão na pasta "dist".
   publish = "dist"
 
 [functions]
-  # A localização das funções de servidor continua a mesma.
+  # Indica onde estão as suas funções de servidor.
   directory = "netlify/functions"
+
+  # AUMENTA O TIMEOUT PARA 25 SEGUNDOS. Esta é a sintaxe correta.
   timeout = 25
