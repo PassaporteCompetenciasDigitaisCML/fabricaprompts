@@ -25,6 +25,7 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
     } else {
       const openRouterApiKey = process.env.OPENROUTER_API_KEY;
       if (!openRouterApiKey) {
+        // Erro mais claro se a chave não estiver configurada
         throw new Error('A variável de ambiente OPENROUTER_API_KEY não está configurada na Netlify.');
       }
 
@@ -55,8 +56,8 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
       });
       
       if (!response.ok) {
-        // Tratamento de erro melhorado para dar mais detalhes
-        const errorBody = await response.json();
+        // Tratamento de erro melhorado para dar mais detalhes ao frontend
+        const errorBody = await response.json().catch(() => ({ error: { message: "Não foi possível analisar a resposta de erro da OpenRouter." }}));
         const errorMessage = errorBody.error?.message || `A API da OpenRouter falhou com o estado ${response.status}`;
         console.error("OpenRouter API Error:", errorMessage, errorBody);
         throw new Error(errorMessage);
@@ -73,6 +74,7 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
 
   } catch (error: any) {
     console.error('Error in Netlify function:', error.message);
+    // Devolve o erro para o frontend num formato JSON
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message || 'Ocorreu um erro desconhecido no servidor.' }),
