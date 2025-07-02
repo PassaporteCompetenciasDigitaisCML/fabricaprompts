@@ -1,0 +1,7 @@
+[build]
+  # Não temos um passo de build complexo, então a pasta a publicar é a raiz.
+  publish = "."
+
+[functions]
+  # Indica à Netlify que as suas funções de servidor estão na pasta 'netlify/functions'.
+  directory = "netlify/functions"
