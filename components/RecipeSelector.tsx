@@ -34,7 +34,6 @@ const RecipeCard: React.FC<{ recipe: Recipe; onSelect: () => void; }> = ({ recip
                     </div>
                     <div className="ml-4 flex-grow">
                         <h3 className="text-base font-bold text-slate-800">{recipe.title}</h3>
-                        <p className="mt-1 text-sm text-slate-500 flex-grow">{recipe.description}</p>
                     </div>
                 </div>
                  {isPopular && (
