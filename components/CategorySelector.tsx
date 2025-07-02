@@ -17,7 +17,6 @@ const CategoryCard: React.FC<CategoryCardProps> = ({ category, onSelect }) => (
     </div>
     <div className="mt-4 flex-grow">
       <h3 className="text-lg font-bold text-slate-800">{category.title}</h3>
-      <p className="mt-1 text-sm text-slate-500">{category.description}</p>
     </div>
   </button>
 );
