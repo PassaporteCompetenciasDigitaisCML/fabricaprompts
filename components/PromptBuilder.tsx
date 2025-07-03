@@ -1,18 +1,14 @@
-
-
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import type { Recipe } from '../types';
 import { CopyIcon, CheckIcon, SparklesIcon, AlertTriangleIcon, BuildIcon, LightbulbIcon } from './Icons';
 import Spinner from './Spinner';
 import StarRating from './StarRating';
 
-
-// Helper para formatar a resposta da IA (negrito e itálico)
 const formatAIResponse = (text: string) => {
   if (!text) return '';
   return text
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Negrito
-    .replace(/\*(.*?)\*/g, '<em>$1</em>'); // Itálico
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>');
 };
 
 interface PromptBuilderProps {
@@ -24,6 +20,7 @@ interface PromptBuilderProps {
   aiResponse: string;
   promptSuggestion: string;
   isLoading: boolean;
+  isTakingLong: boolean; // <-- RECEBE O NOVO ESTADO
   isSuggestionLoading: boolean;
   error: string | null;
   onGenerate: (element: HTMLElement) => void;
@@ -33,7 +30,7 @@ interface PromptBuilderProps {
 
 const PromptBuilder: React.FC<PromptBuilderProps> = ({
   recipe, promptValues, setPromptValues, finalPrompt, setFinalPrompt, 
-  aiResponse, promptSuggestion, isLoading, isSuggestionLoading, error, 
+  aiResponse, promptSuggestion, isLoading, isTakingLong, isSuggestionLoading, error, 
   onGenerate, onCopy, onRating
 }) => {
   const [hasCopied, setHasCopied] = useState(false);
@@ -77,7 +74,7 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({
   const allFieldsFilled = useMemo(() => recipe.placeholders.every(p => promptValues[p.key]), [promptValues, recipe.placeholders]);
 
   const handleRating = (rating: number) => {
-    if (currentRating === 0) { // Only allow rating once per generation
+    if (currentRating === 0) {
       setCurrentRating(rating);
       onRating(rating);
     }
@@ -85,7 +82,7 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({
   
   useEffect(() => {
       setCurrentRating(0);
-  }, [recipe.id, aiResponse]); // Reset rating when recipe or response changes
+  }, [recipe.id, aiResponse]);
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -165,9 +162,13 @@ const PromptBuilder: React.FC<PromptBuilderProps> = ({
             <div>
               <h3 className="font-bold text-lg text-purple-800 mb-4">Resposta da IA:</h3>
               {isLoading ? (
-                  <div className="flex items-center justify-center gap-3 text-slate-500 h-24">
+                  <div className="flex flex-col items-center justify-center gap-3 text-slate-500 h-24">
                       <Spinner className="w-6 h-6 text-purple-500"/>
-                      <span>A IA está a {recipe.type === 'image' ? 'desenhar' : 'pensar'}...</span>
+                      {isTakingLong ? (
+                          <span className="text-center text-sm">A IA está a pensar... Os modelos gratuitos podem demorar um pouco a 'acordar'.<br/>Agradecemos a sua paciência!</span>
+                      ) : (
+                          <span>A IA está a {recipe.type === 'image' ? 'desenhar' : 'pensar'}...</span>
+                      )}
                   </div>
               ) : recipe.type === 'image' ? (
                   <img src={aiResponse} alt="Imagem gerada por IA" className="rounded-lg shadow-md mx-auto" />
