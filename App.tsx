@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import confetti from 'canvas-confetti';
-import type { Category, Recipe } from './types';
+import type { UICategory, Recipe } from './types';
 import Header from './components/Header';
 import CategorySelector from './components/CategorySelector';
 import RecipeSelector from './components/RecipeSelector';
@@ -30,9 +30,9 @@ const App: React.FC = () => {
   const [dataStatus, setDataStatus] = useState<DataStatus>('loading');
   const [dataSource, setDataSource] = useState<DataSource | null>(null);
   const [recipes, setRecipes] = useState<Record<string, Recipe>>({});
-  const [categories, setCategories] = useState<Record<string, Category>>({});
+  const [categories, setCategories] = useState<Record<string, UICategory>>({});
 
-  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<UICategory | null>(null);
   const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   
   const [promptValues, setPromptValues] = useState<Record<string, string>>({});
@@ -40,10 +40,23 @@ const App: React.FC = () => {
   const [aiResponse, setAiResponse] = useState<string>('');
   const [promptSuggestion, setPromptSuggestion] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isTakingLong, setIsTakingLong] = useState<boolean>(false); // <-- NOVO ESTADO
   const [isSuggestionLoading, setIsSuggestionLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Carregar dados da Firebase no arranque
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isLoading) {
+      // Define um timer para mostrar a mensagem de paciência após 4 segundos
+      timer = setTimeout(() => {
+        setIsTakingLong(true);
+      }, 4000);
+    } else {
+      setIsTakingLong(false);
+    }
+    return () => clearTimeout(timer); // Limpa o timer se a resposta chegar antes
+  }, [isLoading]);
+
   useEffect(() => {
     async function loadData() {
       setDataStatus('loading');
@@ -51,7 +64,7 @@ const App: React.FC = () => {
         const { recipes, categories, source } = await getRecipesAndCategories();
         setRecipes(recipes);
         setCategories(categories);
-        setDataSource(source); // Guarda a origem dos dados
+        setDataSource(source);
         setDataStatus('loaded');
       } catch (e) {
         console.error("Failed to load app data:", e);
@@ -60,7 +73,6 @@ const App: React.FC = () => {
     }
     loadData();
   }, []);
-
 
   const appState: AppState = useMemo(() => {
     if (!selectedCategory) return 'selecting_category';
@@ -83,17 +95,7 @@ const App: React.FC = () => {
     });
   };
   
-  const resetState = () => {
-    setSelectedCategory(null);
-    setSelectedRecipe(null);
-    setPromptValues({});
-    setFinalPrompt('');
-    setAiResponse('');
-    setPromptSuggestion('');
-    setError(null);
-  }
-
-  const handleSelectCategory = useCallback((category: Category) => {
+  const handleSelectCategory = useCallback((category: UICategory) => {
     setSelectedCategory(category);
     setPromptValues({});
     setFinalPrompt('');
@@ -178,16 +180,13 @@ const App: React.FC = () => {
       }
   }, [aiResponse, isLoading, finalPrompt, selectedRecipe]);
 
-
   const handleRating = (recipeId: string, rating: number) => {
-      // Atualizar o estado local imediatamente para feedback visual
       setRecipes(prevRecipes => {
           const updatedRecipe = { ...prevRecipes[recipeId] };
           updatedRecipe.totalScore += rating;
           updatedRecipe.voteCount += 1;
           return { ...prevRecipes, [recipeId]: updatedRecipe };
       });
-      // Enviar a atualização para a Firebase em segundo plano
       if (dataSource === 'firestore') {
         updateRecipeRating(recipeId, rating);
       }
@@ -266,7 +265,7 @@ const App: React.FC = () => {
 
               {appState === 'selecting_recipe' && selectedCategory && (
                 <RecipeSelector
-                  recipes={selectedCategory.recipeIds.map(id => recipes[id])}
+                  recipes={selectedCategory.recipeIds.map(id => recipes[id]).filter(Boolean)}
                   categoryTitle={selectedCategory.title}
                   onSelect={handleSelectRecipe}
                 />
@@ -282,6 +281,7 @@ const App: React.FC = () => {
                   aiResponse={aiResponse}
                   promptSuggestion={promptSuggestion}
                   isLoading={isLoading}
+                  isTakingLong={isTakingLong} // <-- PASSA O NOVO ESTADO
                   isSuggestionLoading={isSuggestionLoading}
                   error={error}
                   onGenerate={handleGenerate}
