@@ -41,7 +41,7 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
 
       // ADICIONA UM CONTROLO DE TIMEOUT AO FETCH
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 20000); // Timeout de 20 segundos
+      const timeoutId = setTimeout(() => controller.abort(), 31000); // Timeout de 31 segundos
 
       try {
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
