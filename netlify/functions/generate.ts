@@ -6,14 +6,20 @@ interface RequestBody {
 }
 
 export const handler = async (event: { httpMethod?: string; body: string | null }) => {
+  console.log("--- Netlify Function 'generate' started ---");
+  
   if (event.httpMethod !== 'POST') {
+    console.log("Method not allowed:", event.httpMethod);
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
     const { prompt, type } = JSON.parse(event.body || '{}') as RequestBody;
+    console.log(`Received request - Type: ${type}, Prompt: "${prompt.substring(0, 50)}..."`);
+
 
     if (!prompt || !type) {
+      console.error("Validation Error: Missing prompt or type.");
       return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt or type' }) };
     }
 
@@ -22,11 +28,15 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
     if (type === 'image') {
       const encodedPrompt = encodeURIComponent(prompt);
       result = `https://image.pollinations.ai/prompt/${encodedPrompt}`;
+      console.log("Generated image URL for Pollinations.ai");
+
     } else {
       const openRouterApiKey = process.env.OPENROUTER_API_KEY;
       if (!openRouterApiKey) {
+        console.error("CRITICAL ERROR: OPENROUTER_API_KEY environment variable not found.");
         throw new Error('A variável de ambiente OPENROUTER_API_KEY não está configurada na Netlify.');
       }
+      console.log("OPENROUTER_API_KEY found.");
 
       let systemInstruction = "You are a helpful assistant.";
       if (type === 'text') {
@@ -39,54 +49,58 @@ export const handler = async (event: { httpMethod?: string; body: string | null 
         ? `O prompt do utilizador é: "${prompt}". Dá-me uma dica para melhorar este prompt.`
         : prompt;
 
-      // ADICIONA UM CONTROLO DE TIMEOUT AO FETCH
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 31000); // Timeout de 31 segundos
+      const payload = {
+        model: "deepseek/deepseek-chat-v3-0324:free", 
+        messages: [
+          { "role": "system", "content": systemInstruction },
+          { "role": "user", "content": userMessage }
+        ]
+      };
 
-      try {
-        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${openRouterApiKey}`
-          },
-          body: JSON.stringify({
-            model: "deepseek/deepseek-chat-v3-0324:free", 
-            messages: [
-              { "role": "system", "content": systemInstruction },
-              { "role": "user", "content": userMessage }
-            ]
-          }),
-          signal: controller.signal // Associa o controlador de timeout ao pedido
-        });
+      console.log("Sending payload to OpenRouter...");
+      
+      const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openRouterApiKey}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      console.log(`OpenRouter response status: ${response.status}`);
 
-        clearTimeout(timeoutId); // Limpa o timeout se a resposta chegar a tempo
-
-        if (!response.ok) {
-          const errorBody = await response.json().catch(() => ({ error: { message: "Não foi possível analisar a resposta de erro da OpenRouter." }}));
-          const errorMessage = errorBody.error?.message || `A API da OpenRouter falhou com o estado ${response.status}`;
-          throw new Error(errorMessage);
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("OpenRouter API Error Response Text:", errorText);
+        let errorMessage = `A API da OpenRouter falhou com o estado ${response.status}`;
+        try {
+            const errorBody = JSON.parse(errorText);
+            errorMessage = errorBody.error?.message || errorMessage;
+        } catch (e) {
+            // A resposta não era JSON, o que é útil saber
+            errorMessage = errorText || errorMessage;
         }
-        
-        const data = await response.json();
-        result = data.choices[0].message.content;
-
-      } catch (error: any) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('A API demorou demasiado a responder. Por favor, tente novamente.');
-        }
-        throw error;
+        throw new Error(errorMessage);
       }
+      
+      const data = await response.json();
+      console.log("Successfully received and parsed JSON from OpenRouter.");
+
+      result = data.choices[0].message.content;
     }
 
+    console.log("--- Function finished successfully ---");
     return {
       statusCode: 200,
       body: JSON.stringify({ result }),
     };
 
   } catch (error: any) {
-    console.error('Error in Netlify function:', error.message);
+    console.error("--- ERROR in Netlify function catch block ---");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
+    
     return {
       statusCode: 500,
       body: JSON.stringify({ error: error.message || 'Ocorreu um erro desconhecido no servidor.' }),
